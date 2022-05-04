@@ -1,6 +1,6 @@
 # Grasscutter
 A WIP server reimplementation for *some anime game* 2.3-2.6
-
+[![Build](https://github.com/HamsterNetwork/Grasscutter-Chinese/actions/workflows/build.yml/badge.svg)](https://github.com/HamsterNetwork/Grasscutter-Chinese/actions/workflows/build.yml)
 **Documentation**: [Grasscutter Wiki](https://github.com/Melledy/Grasscutter/wiki/)  
 **Note**: For support please join the [Discord server](https://discord.gg/T5vZU6UyeG).
 # Current features
