@@ -2,7 +2,8 @@ package emu.grasscutter.command;
 
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.game.Account;
-import emu.grasscutter.game.GenshinPlayer;
+import emu.grasscutter.game.player.Player;
+
 import org.reflections.Reflections;
 
 import java.util.*;
@@ -31,7 +32,7 @@ public final class CommandMap {
      * @return Instance chaining.
      */
     public CommandMap registerCommand(String label, CommandHandler command) {
-        Grasscutter.getLogger().debug("已注册的命令: " + label);
+        Grasscutter.getLogger().debug("Registered command: " + label);
 
         // Get command data.
         Command annotation = command.getClass().getAnnotation(Command.class);
@@ -55,7 +56,7 @@ public final class CommandMap {
      * @return Instance chaining.
      */
     public CommandMap unregisterCommand(String label) {
-        Grasscutter.getLogger().debug("未注册的命令: " + label);
+        Grasscutter.getLogger().debug("Unregistered command: " + label);
         CommandHandler handler = this.commands.get(label);
         if (handler == null) return this;
 
@@ -103,10 +104,11 @@ public final class CommandMap {
      * @param player     The player invoking the command or null for the server console.
      * @param rawMessage The messaged used to invoke the command.
      */
-    public void invoke(GenshinPlayer player, String rawMessage) {
+    public void invoke(Player player, String rawMessage) {
         rawMessage = rawMessage.trim();
-        if(rawMessage.length() == 0) {
-            CommandHandler.sendMessage(player, "未指定命令"); return;
+        if (rawMessage.length() == 0) {
+            CommandHandler.sendMessage(player, Grasscutter.getLanguage().No_command_specified);
+            return;
         }
 
         // Remove prefix if present.
@@ -117,11 +119,10 @@ public final class CommandMap {
         String[] split = rawMessage.split(" ");
         List<String> args = new LinkedList<>(Arrays.asList(split));
         String label = args.remove(0);
-
         // Get command handler.
         CommandHandler handler = this.commands.get(label);
         if (handler == null) {
-            CommandHandler.sendMessage(player, "未知命令: " + label);
+            CommandHandler.sendMessage(player, Grasscutter.getLanguage().Unknown_command + label);
             return;
         }
 
@@ -129,14 +130,22 @@ public final class CommandMap {
         if (player != null) {
             String permissionNode = this.annotations.get(label).permission();
             Account account = player.getAccount();
-            if(!permissionNode.isEmpty() && !account.hasPermission(permissionNode)) {
-                CommandHandler.sendMessage(player, "你没有权限执行该命令");
+            if (!permissionNode.isEmpty() && !account.hasPermission(permissionNode)) {
+                CommandHandler.sendMessage(player, Grasscutter.getLanguage().You_not_permission_run_command);
                 return;
             }
         }
 
         // Invoke execute method for handler.
-        handler.execute(player, args);
+        boolean threading  = this.annotations.get(label).threading();
+        Runnable runnable = () -> handler.execute(player, args);
+        if(threading) {
+            Thread command = new Thread(runnable);
+            command.start();
+        }
+        else {
+            runnable.run();
+        }
     }
 
     /**

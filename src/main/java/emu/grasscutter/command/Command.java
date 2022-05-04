@@ -7,11 +7,13 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Command {
     String label() default "";
 
-    String usage() default "未指定用法";
+    String usage() default "No usage specified";
 
-    String description() default "未指定说明";
+    String description() default "No description specified";
 
     String[] aliases() default {};
 
     String permission() default "";
+
+    boolean threading() default false;
 }

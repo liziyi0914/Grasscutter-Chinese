@@ -48,7 +48,8 @@ echo location of your Java installation.
 goto fail
 
 :findJavaFromJavaHome
-set JAVA_EXE=C:\Program Files\Java\jdk-17.0.3\bin\java.exe
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
 
 if exist "%JAVA_EXE%" goto init
 
@@ -97,4 +98,3 @@ exit /b 1
 if "%OS%"=="Windows_NT" endlocal
 
 :omega
-pause

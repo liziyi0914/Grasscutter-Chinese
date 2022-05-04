@@ -3,29 +3,29 @@ package emu.grasscutter.command.commands;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
-import emu.grasscutter.data.GenshinData;
+import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.def.AvatarData;
-import emu.grasscutter.game.GenshinPlayer;
-import emu.grasscutter.game.avatar.GenshinAvatar;
+import emu.grasscutter.game.avatar.Avatar;
+import emu.grasscutter.game.player.Player;
 
 import java.util.List;
 
-@Command(label = "givechar", usage = "givechar <玩家Id> <人物Id> [等级]",
-        description = "给予玩家一个指定的角色", aliases = {"givec"}, permission = "player.givechar")
+@Command(label = "givechar", usage = "givechar <playerId> <avatarId> [level]",
+        description = "Gives the player a specified character", aliases = {"givec"}, permission = "player.givechar")
 public final class GiveCharCommand implements CommandHandler {
 
     @Override
-    public void execute(GenshinPlayer sender, List<String> args) {
+    public void execute(Player sender, List<String> args) {
         int target, avatarId, level = 1, ascension;
 
         if (sender == null && args.size() < 2) {
-            CommandHandler.sendMessage(null, "用法: givechar <玩家Id> <人物Id> [等级]");
+            CommandHandler.sendMessage(null, Grasscutter.getLanguage().GiveChar_usage);
             return;
         }
 
         switch (args.size()) {
             default:
-                CommandHandler.sendMessage(sender, "用法: givechar <玩家Id> <人物Id> [等级]");
+                CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_usage);
                 return;
             case 2:
                 try {
@@ -39,7 +39,7 @@ public final class GiveCharCommand implements CommandHandler {
                     }
                 } catch (NumberFormatException ignored) {
                     // TODO: Parse from avatar name using GM Handbook.
-                    CommandHandler.sendMessage(sender, "无效的角色id或玩家id");
+                    CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_invalid_avatar_or_player_id);
                     return;
                 }
                 break;
@@ -47,7 +47,7 @@ public final class GiveCharCommand implements CommandHandler {
                 try {
                     target = Integer.parseInt(args.get(0));
                     if (Grasscutter.getGameServer().getPlayerByUid(target) == null) {
-                        CommandHandler.sendMessage(sender, "无效的玩家id");
+                        CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Invalid_playerId);
                         return;
                     }
 
@@ -55,21 +55,27 @@ public final class GiveCharCommand implements CommandHandler {
                     level = Integer.parseInt(args.get(2));
                 } catch (NumberFormatException ignored) {
                     // TODO: Parse from avatar name using GM Handbook.
-                    CommandHandler.sendMessage(sender, "无效的角色id或玩家id");
+                    CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_invalid_avatar_or_player_id);
                     return;
                 }
                 break;
         }
 
-        GenshinPlayer targetPlayer = Grasscutter.getGameServer().getPlayerByUid(target);
+        Player targetPlayer = Grasscutter.getGameServer().getPlayerByUid(target);
         if (targetPlayer == null) {
-            CommandHandler.sendMessage(sender, "玩家未找到");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Player_not_found);
             return;
         }
 
-        AvatarData avatarData = GenshinData.getAvatarDataMap().get(avatarId);
+        AvatarData avatarData = GameData.getAvatarDataMap().get(avatarId);
         if (avatarData == null) {
-            CommandHandler.sendMessage(sender, "无效的角色id");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_invalid_avatar_id);
+            return;
+        }
+
+        // Check level.
+        if (level > 90) {
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_invalid_avatar_level);
             return;
         }
 
@@ -80,7 +86,7 @@ public final class GiveCharCommand implements CommandHandler {
             ascension = (int) Math.ceil(level / 10f) - 3;
         }
 
-        GenshinAvatar avatar = new GenshinAvatar(avatarId);
+        Avatar avatar = new Avatar(avatarId);
         avatar.setLevel(level);
         avatar.setPromoteLevel(ascension);
 
@@ -88,6 +94,6 @@ public final class GiveCharCommand implements CommandHandler {
         avatar.recalcStats();
 
         targetPlayer.addAvatar(avatar);
-        CommandHandler.sendMessage(sender, String.format("已将%s给予%s.", avatarId, target));
+        CommandHandler.sendMessage(sender, Grasscutter.getLanguage().GiveChar_given.replace("{avatarId}", Integer.toString(avatarId)).replace("{level}", Integer.toString(level)).replace("{target}", Integer.toString(target)));
     }
 }

@@ -3,62 +3,65 @@ package emu.grasscutter.command.commands;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
-import emu.grasscutter.game.GenshinPlayer;
-import emu.grasscutter.game.GenshinScene;
 import emu.grasscutter.game.entity.EntityMonster;
+import emu.grasscutter.game.entity.GameEntity;
+import emu.grasscutter.game.player.Player;
+import emu.grasscutter.game.world.Scene;
 
 import java.util.List;
 
-@Command(label = "killall", usage = "killall [uid] [场景 ID]",
-        description = "杀死指定玩家世界中所在或指定场景的全部生物", permission = "server.killall")
+@Command(label = "killall", usage = "killall [playerUid] [sceneId]",
+        description = "Kill all entities", permission = "server.killall")
 public final class KillAllCommand implements CommandHandler {
 
     @Override
-    public void execute(GenshinPlayer sender, List<String> args) {
-        GenshinScene scene;
-        GenshinPlayer genshinPlayer;
+    public void execute(Player sender, List<String> args) {
+        Scene mainScene;
+        Player targetPlayer;
 
         try {
             switch (args.size()) {
                 case 0: // *No args*
                     if (sender == null) {
-                        CommandHandler.sendMessage(null, "用法: killall [uid] [场景 ID]");
+                        CommandHandler.sendMessage(null, Grasscutter.getLanguage().Kill_usage);
                         return;
                     }
-                    scene = sender.getScene();
+                    mainScene = sender.getScene();
                     break;
                 case 1: // [playerUid]
-                    genshinPlayer = Grasscutter.getGameServer().getPlayerByUid(Integer.parseInt(args.get(0)));
-                    if (genshinPlayer == null) {
-                        CommandHandler.sendMessage(sender, "玩家未找到或不在线");
+                    targetPlayer = Grasscutter.getGameServer().getPlayerByUid(Integer.parseInt(args.get(0)));
+                    if (targetPlayer == null) {
+                        CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Player_not_found_or_offline);
                         return;
                     }
-                    scene = genshinPlayer.getScene();
+                    mainScene = targetPlayer.getScene();
                     break;
                 case 2: // [playerUid] [sceneId]
-                    genshinPlayer = Grasscutter.getGameServer().getPlayerByUid(Integer.parseInt(args.get(0)));
-                    if (genshinPlayer == null) {
-                        CommandHandler.sendMessage(sender, "玩家未找到或不在线");
+                    targetPlayer = Grasscutter.getGameServer().getPlayerByUid(Integer.parseInt(args.get(0)));
+                    if (targetPlayer == null) {
+                        CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Player_not_found_or_offline);
                         return;
                     }
-                    GenshinScene genshinScene = sender.getWorld().getSceneById(Integer.parseInt(args.get(1)));
-                    if (genshinScene == null) {
-                        CommandHandler.sendMessage(sender, "在玩家的世界中找不到场景");
+                    Scene scene = sender.getWorld().getSceneById(Integer.parseInt(args.get(1)));
+                    if (scene == null) {
+                        CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Kill_scene_not_found_in_player_world);
                         return;
                     }
-                    scene = genshinScene;
+                    mainScene = scene;
                     break;
                 default:
-                    CommandHandler.sendMessage(sender, "用法: killall [uid] [场景 ID]");
+                    CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Kill_usage);
                     return;
             }
 
-            scene.getEntities().values().stream()
+            // Separate into list to avoid concurrency issue
+            List<GameEntity> toKill = mainScene.getEntities().values().stream()
                     .filter(entity -> entity instanceof EntityMonster)
-                    .forEach(entity -> scene.killEntity(entity, 0));
-            CommandHandler.sendMessage(sender, "杀死场景" + scene.getId() + "中的所有怪物");
+                    .toList();
+            toKill.stream().forEach(entity -> mainScene.killEntity(entity, 0));
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Kill_kill_monsters_in_scene.replace("{size}", Integer.toString(toKill.size())).replace("{id}", Integer.toString(mainScene.getId())));
         } catch (NumberFormatException ignored) {
-            CommandHandler.sendMessage(sender, "无效的参数");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Invalid_arguments);
         }
     }
 }

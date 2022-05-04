@@ -4,18 +4,18 @@ import emu.grasscutter.Grasscutter;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
 import emu.grasscutter.game.Account;
-import emu.grasscutter.game.GenshinPlayer;
+import emu.grasscutter.game.player.Player;
 
 import java.util.List;
 
-@Command(label = "permission", usage = "permission <add|remove> < 用户名 > < 权限节点 (* 为所有)>",
-        description = "添加或移除玩家的权限", permission = "*")
+@Command(label = "permission", usage = "permission <add|remove> <username> <permission>",
+        description = "Grants or removes a permission for a user", permission = "*")
 public final class PermissionCommand implements CommandHandler {
 
     @Override
-    public void execute(GenshinPlayer sender, List<String> args) {
+    public void execute(Player sender, List<String> args) {
         if (args.size() < 3) {
-            CommandHandler.sendMessage(sender, "用法: permission <add|remove> < 用户名 > < 权限节点 (* 为所有)>");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_usage);
             return;
         }
 
@@ -25,23 +25,23 @@ public final class PermissionCommand implements CommandHandler {
 
         Account account = Grasscutter.getGameServer().getAccountByName(username);
         if (account == null) {
-            CommandHandler.sendMessage(sender, "账号未找到");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Account_not_find);
             return;
         }
 
         switch (action) {
             default:
-                CommandHandler.sendMessage(sender, "用法: permission <add|remove> < 用户名 > < 权限节点 (* 为所有)>");
+                CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_usage);
                 break;
             case "add":
                 if (account.addPermission(permission)) {
-                    CommandHandler.sendMessage(sender, "权限已添加");
-                } else CommandHandler.sendMessage(sender, "该玩家已拥有该权限");
+                    CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_add);
+                } else CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_have_permission);
                 break;
             case "remove":
                 if (account.removePermission(permission)) {
-                    CommandHandler.sendMessage(sender, "权限已删除");
-                } else CommandHandler.sendMessage(sender, "改玩家未拥有该权限");
+                    CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_remove);
+                } else CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Permission_not_have_permission);
                 break;
         }
 

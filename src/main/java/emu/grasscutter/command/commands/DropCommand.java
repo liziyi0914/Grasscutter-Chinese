@@ -1,28 +1,29 @@
 package emu.grasscutter.command.commands;
 
+import emu.grasscutter.Grasscutter;
 import emu.grasscutter.command.Command;
 import emu.grasscutter.command.CommandHandler;
-import emu.grasscutter.data.GenshinData;
+import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.def.ItemData;
-import emu.grasscutter.game.GenshinPlayer;
 import emu.grasscutter.game.entity.EntityItem;
+import emu.grasscutter.game.player.Player;
 import emu.grasscutter.utils.Position;
 
 import java.util.List;
 
-@Command(label = "drop", usage = "drop <物品id|物品名称> [数量]",
+@Command(label = "drop", usage = "drop <itemId|itemName> [amount]",
         description = "Drops an item near you", aliases = {"d", "dropitem"}, permission = "server.drop")
 public final class DropCommand implements CommandHandler {
 
     @Override
-    public void execute(GenshinPlayer sender, List<String> args) {
+    public void execute(Player sender, List<String> args) {
         if (sender == null) {
-            CommandHandler.sendMessage(null, "在游戏中运行这个命令");
+            CommandHandler.sendMessage(null, Grasscutter.getLanguage().Run_this_command_in_game);
             return;
         }
 
         if (args.size() < 1) {
-            CommandHandler.sendMessage(sender, "用法: drop <物品id|物品名称> [数量]");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Drop_usage);
             return;
         }
 
@@ -31,9 +32,9 @@ public final class DropCommand implements CommandHandler {
             int amount = 1;
             if (args.size() > 1) amount = Integer.parseInt(args.get(1));
 
-            ItemData itemData = GenshinData.getItemDataMap().get(item);
+            ItemData itemData = GameData.getItemDataMap().get(item);
             if (itemData == null) {
-                CommandHandler.sendMessage(sender, "无效的物品ID");
+                CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Invalid_item_id);
                 return;
             }
 
@@ -48,9 +49,9 @@ public final class DropCommand implements CommandHandler {
                 EntityItem entity = new EntityItem(sender.getScene(), sender, itemData, sender.getPos().clone().addY(3f), amount);
                 sender.getScene().addEntity(entity);
             }
-            CommandHandler.sendMessage(sender, String.format("掉了 %s 个 %s.", amount, item));
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Drop_dropped_of.replace("{amount}", Integer.toString(amount)).replace("{item}", Integer.toString(item)));
         } catch (NumberFormatException ignored) {
-            CommandHandler.sendMessage(sender, "无效的物品或玩家ID");
+            CommandHandler.sendMessage(sender, Grasscutter.getLanguage().Invalid_item_or_player_id);
         }
     }
 }
